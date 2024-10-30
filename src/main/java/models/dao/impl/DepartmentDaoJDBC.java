@@ -20,18 +20,17 @@ public class DepartmentDaoJDBC implements DepartmentDao {
     @Override
     public void insert(Department obj) {
         PreparedStatement st = null;
-        ResultSet rs = null;
         try {
             String sql = "insert into department "
                     + "(name) "
-                    + "values (name = ? )";
+                    + "values (?)";
             st = conn.prepareStatement(sql, Statement.RETURN_GENERATED_KEYS);
             st.setString(1, obj.getName());
 
             int rowsAffected = st.executeUpdate();
 
             if (rowsAffected > 0 ){
-               rs = st.getGeneratedKeys();
+               ResultSet rs = st.getGeneratedKeys();
                if (rs.next()){
                    int id = rs.getInt(1);
                    obj.setId(id);
@@ -53,7 +52,22 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 
     @Override
     public void update(Department obj) {
-
+        PreparedStatement st = null;
+        try {
+            String sql = "update department " +
+                    "set name = ? " +
+                    "where id = ? ";
+            st = conn.prepareStatement(sql);
+            st.setString(1, obj.getName());
+            st.setInt(2, obj.getId());
+            st.executeUpdate();
+        }
+        catch (SQLException e){
+            throw new DbException(e.getMessage());
+        }
+        finally {
+            DAO.closeStmament(st);
+        }
     }
 
     @Override
@@ -63,7 +77,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
            String sql = "delete from department where id = ?";
            st = conn.prepareStatement(sql);
            st.setInt(1, id);
-           st.executeQuery();
+           st.executeUpdate();
         }
         catch (SQLException e){
             throw new DbException(e.getMessage());
@@ -83,7 +97,6 @@ public class DepartmentDaoJDBC implements DepartmentDao {
                     + "where id = ?";
             st = conn.prepareStatement(sql);
             st.setInt(1, id);
-
             rs = st.executeQuery();
 
             if (rs.next()){
@@ -93,7 +106,6 @@ public class DepartmentDaoJDBC implements DepartmentDao {
 
                 return dep;
             }
-
             return null;
         }
         catch (SQLException e){
@@ -111,7 +123,7 @@ public class DepartmentDaoJDBC implements DepartmentDao {
         ResultSet rs = null;
 
         try {
-            String sql = "select * from department";
+            String sql = "select * from department order by name";
             st = conn.prepareStatement(sql);
             rs = st.executeQuery();
 
